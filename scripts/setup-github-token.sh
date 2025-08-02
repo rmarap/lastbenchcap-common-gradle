@@ -45,5 +45,9 @@ echo "   Repository: https://github.com/rmarap/lastbenchcap-common"
 echo "   Package URL: https://maven.pkg.github.com/rmarap/lastbenchcap-common"
 echo "   Group ID: com.lastbenchcap"
 echo "   Artifact ID: lastbenchcap-common"
-echo "   Version: $(grep 'library.version=' gradle.properties | cut -d'=' -f2)"
+if [ -f "gradle.properties" ]; then
+    echo "   Version: $(grep 'library.version=' gradle.properties | cut -d'=' -f2)"
+else
+    echo "   Version: $(grep 'library.version=' ../gradle.properties | cut -d'=' -f2)"
+fi
 echo "" 

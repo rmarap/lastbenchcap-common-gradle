@@ -26,11 +26,19 @@ echo "✅ GITHUB_TOKEN is set"
 echo "Building and publishing..."
 
 # Build the library (skip tests for now)
-./gradlew clean build -x test
+if [ -f "gradlew" ]; then
+    ./gradlew clean build -x test
+else
+    ../gradlew clean build -x test
+fi
 
 # Publish to GitHub Packages
 echo "Publishing to GitHub Packages..."
-./gradlew publish
+if [ -f "gradlew" ]; then
+    ./gradlew publish
+else
+    ../gradlew publish
+fi
 
 if [ $? -eq 0 ]; then
     echo "✅ Successfully published to GitHub Packages!"

@@ -69,12 +69,21 @@ export GPR_USER=lastbenchcap
 
 # Update version in gradle.properties
 print_status "Updating version to $VERSION in gradle.properties..."
-sed -i.bak "s/library.version=.*/library.version=$VERSION/" gradle.properties
-rm gradle.properties.bak
+if [ -f "gradle.properties" ]; then
+    sed -i.bak "s/library.version=.*/library.version=$VERSION/" gradle.properties
+    rm gradle.properties.bak
+else
+    sed -i.bak "s/library.version=.*/library.version=$VERSION/" ../gradle.properties
+    rm ../gradle.properties.bak
+fi
 
 # Build the library
 print_status "Building library..."
-./gradlew clean build
+if [ -f "gradlew" ]; then
+    ./gradlew clean build
+else
+    ../gradlew clean build
+fi
 
 if [ $? -ne 0 ]; then
     print_error "Build failed!"
@@ -85,7 +94,11 @@ print_success "Build completed successfully"
 
 # Publish to GitHub Packages
 print_status "Publishing to GitHub Packages..."
-./gradlew publish
+if [ -f "gradlew" ]; then
+    ./gradlew publish
+else
+    ../gradlew publish
+fi
 
 if [ $? -eq 0 ]; then
     print_success "Successfully published version $VERSION to GitHub Packages!"

@@ -29,14 +29,25 @@ print_error() {
 
 # Function to get current version
 get_current_version() {
-    grep "library.version=" gradle.properties | cut -d'=' -f2
+    # Determine if we're in the scripts directory or root directory
+    if [ -f "gradle.properties" ]; then
+        grep "library.version=" gradle.properties | cut -d'=' -f2
+    else
+        grep "library.version=" ../gradle.properties | cut -d'=' -f2
+    fi
 }
 
 # Function to update version
 update_version() {
     local new_version=$1
-    sed -i.bak "s/library.version=.*/library.version=$new_version/" gradle.properties
-    rm gradle.properties.bak
+    # Determine if we're in the scripts directory or root directory
+    if [ -f "gradle.properties" ]; then
+        sed -i.bak "s/library.version=.*/library.version=$new_version/" gradle.properties
+        rm gradle.properties.bak
+    else
+        sed -i.bak "s/library.version=.*/library.version=$new_version/" ../gradle.properties
+        rm ../gradle.properties.bak
+    fi
     print_success "Version updated to $new_version"
 }
 

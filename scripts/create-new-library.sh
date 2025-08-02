@@ -52,7 +52,7 @@ mkdir -p "$NEW_DIR"
 
 # Copy all files except git directory and this script
 echo "📋 Copying template files..."
-rsync -av --exclude='.git' --exclude='create-new-library.sh' --exclude='node_modules' --exclude='.DS_Store' ./ "$NEW_DIR/"
+rsync -av --exclude='.git' --exclude='scripts/create-new-library.sh' --exclude='node_modules' --exclude='.DS_Store' ./ "$NEW_DIR/"
 
 # Navigate to the new directory
 cd "$NEW_DIR"
@@ -91,17 +91,17 @@ find .github/workflows -name "*.bak" -delete
 
 # Update publish scripts
 echo "📤 Updating publish scripts..."
-sed -i.bak "s/lastbenchcap-common/$LIBRARY_NAME/g" publish.sh
-sed -i.bak "s/lastbenchcap-common/$LIBRARY_NAME/g" publish-to-github.sh
-sed -i.bak "s/rmarap/$GITHUB_OWNER/g" publish.sh
-sed -i.bak "s/rmarap/$GITHUB_OWNER/g" publish-to-github.sh
+sed -i.bak "s/lastbenchcap-common/$LIBRARY_NAME/g" scripts/publish.sh
+sed -i.bak "s/lastbenchcap-common/$LIBRARY_NAME/g" scripts/publish-to-github.sh
+sed -i.bak "s/rmarap/$GITHUB_OWNER/g" scripts/publish.sh
+sed -i.bak "s/rmarap/$GITHUB_OWNER/g" scripts/publish-to-github.sh
 find . -name "*.bak" -delete
 
 # Update setup script
 echo "🔧 Updating setup script..."
-sed -i.bak "s/lastbenchcap-common/$LIBRARY_NAME/g" setup-github-token.sh
-sed -i.bak "s/rmarap/$GITHUB_OWNER/g" setup-github-token.sh
-rm -f setup-github-token.sh.bak
+sed -i.bak "s/lastbenchcap-common/$LIBRARY_NAME/g" scripts/setup-github-token.sh
+sed -i.bak "s/rmarap/$GITHUB_OWNER/g" scripts/setup-github-token.sh
+rm -f scripts/setup-github-token.sh.bak
 
 # Initialize git repository
 echo "🔧 Initializing git repository..."
@@ -129,6 +129,6 @@ echo "   cd $NEW_DIR"
 echo "   ./gradlew clean build"
 echo ""
 echo "5. Publish to GitHub Packages:"
-echo "   ./publish-to-github.sh"
+echo "   ./scripts/publish-to-github.sh"
 echo ""
 echo "🎉 Your new library is ready!" 

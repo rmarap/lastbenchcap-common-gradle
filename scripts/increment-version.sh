@@ -39,7 +39,11 @@ fi
 print_status "Incrementing version by $INCREMENT_TYPE"
 
 # Get current version
-CURRENT_VERSION=$(grep "library.version=" gradle.properties | cut -d'=' -f2)
+if [ -f "gradle.properties" ]; then
+    CURRENT_VERSION=$(grep "library.version=" gradle.properties | cut -d'=' -f2)
+else
+    CURRENT_VERSION=$(grep "library.version=" ../gradle.properties | cut -d'=' -f2)
+fi
 print_status "Current version: $CURRENT_VERSION"
 
 # Parse version parts
@@ -68,8 +72,13 @@ NEW_VERSION="$MAJOR.$MINOR.$PATCH"
 print_status "New version: $NEW_VERSION"
 
 # Update gradle.properties
-sed -i.bak "s/library.version=.*/library.version=$NEW_VERSION/" gradle.properties
-rm gradle.properties.bak
+if [ -f "gradle.properties" ]; then
+    sed -i.bak "s/library.version=.*/library.version=$NEW_VERSION/" gradle.properties
+    rm gradle.properties.bak
+else
+    sed -i.bak "s/library.version=.*/library.version=$NEW_VERSION/" ../gradle.properties
+    rm ../gradle.properties.bak
+fi
 
 print_success "Updated gradle.properties to version $NEW_VERSION"
 
@@ -80,7 +89,11 @@ echo "  $CURRENT_VERSION → $NEW_VERSION"
 
 # Commit the change
 print_status "Committing version change..."
-git add gradle.properties
+if [ -f "gradle.properties" ]; then
+    git add gradle.properties
+else
+    git add ../gradle.properties
+fi
 git commit -m "Bump version to $NEW_VERSION [skip ci]"
 
 print_success "Version incremented and committed successfully!"

@@ -56,19 +56,31 @@ fi
 case "${1:-help}" in
     build)
         print_info "Building the plugin..."
-        ./gradlew build
+        if [ -f "gradlew" ]; then
+            ./gradlew build
+        else
+            ../gradlew build
+        fi
         print_success "Plugin built successfully!"
         ;;
     publish)
         print_info "Publishing the plugin to GitHub Packages..."
-        ./gradlew publish
+        if [ -f "gradlew" ]; then
+            ./gradlew publish
+        else
+            ../gradlew publish
+        fi
         print_success "Plugin published successfully!"
         print_info "You can now use it in other projects with:"
         print_info "  id 'com.lastbenchcap.common.gradle.library' version '1.0.0'"
         ;;
     test)
         print_info "Testing the plugin..."
-        ./gradlew test
+        if [ -f "gradlew" ]; then
+            ./gradlew test
+        else
+            ../gradlew test
+        fi
         print_success "Plugin tests passed!"
         ;;
     setup-lib)

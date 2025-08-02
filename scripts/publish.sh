@@ -5,18 +5,30 @@
 echo "Building and publishing LastBenchCap Common Library..."
 
 # Build the library
-./gradlew clean build
+if [ -f "gradlew" ]; then
+    ./gradlew clean build
+else
+    ../gradlew clean build
+fi
 
 # Publish to local Maven repository (for testing)
 echo "Publishing to local Maven repository..."
-./gradlew publishToMavenLocal
+if [ -f "gradlew" ]; then
+    ./gradlew publishToMavenLocal
+else
+    if [ -f "gradlew" ]; then
+        ./gradlew publish
+    else
+        ../gradlew publish
+    fi
+fi
 
 # Publish to GitHub Packages (requires GITHUB_TOKEN environment variable)
 if [ -n "$GITHUB_TOKEN" ]; then
     echo "Publishing to GitHub Packages..."
     export GPR_KEY=$GITHUB_TOKEN
     export GPR_USER=rmarap
-    ./gradlew publish
+    ../gradlew publish
 else
     echo "GITHUB_TOKEN not set. Skipping GitHub Packages publish."
     echo "To publish to GitHub Packages, set the GITHUB_TOKEN environment variable:"

@@ -35,9 +35,15 @@ if [ -z "$GITHUB_TOKEN" ]; then
 fi
 
 # Get repository info from gradle.properties
-GITHUB_OWNER=$(grep "github.owner=" gradle.properties | cut -d'=' -f2)
-GITHUB_REPO=$(grep "github.repo=" gradle.properties | cut -d'=' -f2)
-CURRENT_VERSION=$(grep "library.version=" gradle.properties | cut -d'=' -f2)
+if [ -f "gradle.properties" ]; then
+    GITHUB_OWNER=$(grep "github.owner=" gradle.properties | cut -d'=' -f2)
+    GITHUB_REPO=$(grep "github.repo=" gradle.properties | cut -d'=' -f2)
+    CURRENT_VERSION=$(grep "library.version=" gradle.properties | cut -d'=' -f2)
+else
+    GITHUB_OWNER=$(grep "github.owner=" ../gradle.properties | cut -d'=' -f2)
+    GITHUB_REPO=$(grep "github.repo=" ../gradle.properties | cut -d'=' -f2)
+    CURRENT_VERSION=$(grep "library.version=" ../gradle.properties | cut -d'=' -f2)
+fi
 
 print_status "Repository: $GITHUB_OWNER/$GITHUB_REPO"
 print_status "Current version in gradle.properties: $CURRENT_VERSION"
