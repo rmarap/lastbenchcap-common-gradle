@@ -104,6 +104,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
+            groupId = project.findProperty('library.group') ?: 'com.lastbenchcap'
             artifactId = project.findProperty('library.artifactId') ?: project.name
             version = libraryVersion
             
