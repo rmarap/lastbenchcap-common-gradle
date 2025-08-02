@@ -70,6 +70,8 @@ gradlePlugin {
         commonLibraryPlugin {
             id = 'com.lastbenchcap.common.gradle.library'
             implementationClass = 'com.lastbenchcap.common.gradle.CommonLibraryPlugin'
+            displayName = 'LastBenchCap Common Gradle Library Plugin'
+            description = 'A Gradle plugin that provides common configuration for LastBenchCap libraries'
         }
     }
 }
