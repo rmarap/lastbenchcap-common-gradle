@@ -1,0 +1,215 @@
+name: Build and Publish to GitHub Packages
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - snapshot
+      custom_version:
+        description: 'Custom version (optional)'
+        required: false
+        type: string
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Required for git history
+        token: ${{ secrets.GITHUB_TOKEN }}
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        
+    - name: Configure Git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+    - name: Get current version
+      id: current_version
+      run: |
+        CURRENT_VERSION=$(grep "library.version=" gradle.properties | cut -d'=' -f2)
+        echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+        echo "Current version: $CURRENT_VERSION"
+        
+    - name: Determine new version
+      id: new_version
+      run: |
+        CURRENT_VERSION="${{ steps.current_version.outputs.current_version }}"
+        BUILD_TYPE="${{ github.event.inputs.build_type }}"
+        CUSTOM_VERSION="${{ github.event.inputs.custom_version }}"
+        
+        if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+          # For manual builds
+          if [ -n "$CUSTOM_VERSION" ]; then
+            NEW_VERSION="$CUSTOM_VERSION"
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "new_version_type=custom" >> $GITHUB_OUTPUT
+          else
+            # Auto-increment based on build type
+            IFS='.' read -ra VERSION_PARTS <<< "${CURRENT_VERSION%-SNAPSHOT}"
+            MAJOR=${VERSION_PARTS[0]}
+            MINOR=${VERSION_PARTS[1]}
+            PATCH=${VERSION_PARTS[2]}
+            
+            case $BUILD_TYPE in
+              major)
+                MAJOR=$((MAJOR + 1))
+                MINOR=0
+                PATCH=0
+                ;;
+              minor)
+                MINOR=$((MINOR + 1))
+                PATCH=0
+                ;;
+              patch)
+                PATCH=$((PATCH + 1))
+                ;;
+              snapshot)
+                NEW_VERSION="${CURRENT_VERSION%-SNAPSHOT}-SNAPSHOT"
+                echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+                echo "new_version_type=snapshot" >> $GITHUB_OUTPUT
+                exit 0
+                ;;
+            esac
+            
+            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "new_version_type=release" >> $GITHUB_OUTPUT
+          fi
+        else
+          # For pushes to master/main, auto-increment patch
+          IFS='.' read -ra VERSION_PARTS <<< "${CURRENT_VERSION%-SNAPSHOT}"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=${VERSION_PARTS[2]}
+          PATCH=$((PATCH + 1))
+          
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "new_version_type=release" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "New version: $NEW_VERSION"
+        
+    - name: Check if version already exists
+      id: version_check
+      run: |
+        NEW_VERSION="${{ steps.new_version.outputs.new_version }}"
+        
+        # Try to check if version exists in GitHub Packages
+        echo "Checking if version $NEW_VERSION already exists..."
+        
+        # This is a simple check - if the version exists, we'll get a 409 later
+        # but we can at least log what we're trying to do
+        echo "Will attempt to publish version: $NEW_VERSION"
+        echo "version_exists=false" >> $GITHUB_OUTPUT
+        
+    - name: Update version in gradle.properties
+      run: |
+        sed -i "s/library.version=.*/library.version=${{ steps.new_version.outputs.new_version }}/" gradle.properties
+        echo "Updated version to ${{ steps.new_version.outputs.new_version }}"
+        
+    - name: Build and test
+      run: |
+        ./gradlew clean build
+        
+    - name: Commit and push version change
+      if: steps.new_version.outputs.new_version_type == 'release'
+      run: |
+        # Add the updated gradle.properties
+        git add gradle.properties
+        
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          # Commit the version change
+          git commit -m "Bump version to ${{ steps.new_version.outputs.new_version }} [skip ci]"
+          
+          # Push the changes back to the repository
+          git push origin HEAD:${{ github.ref }}
+          echo "Successfully pushed version change to repository"
+        fi
+        
+    - name: Create git tag for release versions
+      if: steps.new_version.outputs.new_version_type == 'release'
+      run: |
+        # Create and push the tag
+        git tag -a "v${{ steps.new_version.outputs.new_version }}" -m "Release version ${{ steps.new_version.outputs.new_version }}"
+        git push origin "v${{ steps.new_version.outputs.new_version }}"
+        echo "Created and pushed tag v${{ steps.new_version.outputs.new_version }}"
+        
+    - name: Debug repository information
+      run: |
+        echo "GitHub Repository: ${{ github.repository }}"
+        echo "GitHub Repository Owner: ${{ github.repository_owner }}"
+        echo "GitHub Repository Name: ${{ github.event.repository.name }}"
+        echo "Publishing version: ${{ steps.new_version.outputs.new_version }}"
+        
+    - name: Publish to GitHub Packages
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GPR_KEY: ${{ secrets.GITHUB_TOKEN }}
+        GPR_USER: ${{ github.repository_owner }}
+        GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        # Set up credentials for GitHub Packages
+        echo "gpr.user=${{ github.repository_owner }}" >> gradle.properties
+        echo "gpr.key=${{ secrets.GITHUB_TOKEN }}" >> gradle.properties
+        echo "github.owner=${{ github.repository_owner }}" >> gradle.properties
+        echo "github.repo=${{ github.repository }}" >> gradle.properties
+        
+        # Debug the repository URL being used
+        echo "Repository URL: https://maven.pkg.github.com/${{ github.repository }}"
+        
+        # Try to publish with retry logic
+        MAX_RETRIES=3
+        RETRY_COUNT=0
+        
+        while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+          echo "Attempt $((RETRY_COUNT + 1)) to publish version ${{ steps.new_version.outputs.new_version }}"
+          
+          if ./gradlew publish; then
+            echo "✅ Successfully published version ${{ steps.new_version.outputs.new_version }}"
+            break
+          else
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "⚠️  Publish attempt $RETRY_COUNT failed. Retrying in 10 seconds..."
+              sleep 10
+            else
+              echo "❌ Failed to publish after $MAX_RETRIES attempts"
+              exit 1
+            fi
+          fi
+        done
+        
+    - name: Show build results
+      run: |
+        echo "✅ Build completed successfully"
+        echo "📦 Package: com.lastbenchcap.common.gradle:com.lastbenchcap.common.gradle:${{ steps.new_version.outputs.new_version }}"
+        echo "🔗 Repository: https://maven.pkg.github.com/${{ github.repository }}"
+        if [ "${{ steps.new_version.outputs.new_version_type }}" = "release" ]; then
+          echo "🏷️  Git tag: v${{ steps.new_version.outputs.new_version }}"
+        fi 

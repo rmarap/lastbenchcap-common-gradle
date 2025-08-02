@@ -11,7 +11,6 @@
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.nar
 *.ear
@@ -19,6 +18,17 @@
 *.tar.gz
 *.rar
 
+# JAR files (except Gradle wrapper)
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Gradle wrapper properties (should be tracked)
+!gradle/wrapper/gradle-wrapper.properties
+
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+/build/
+/.idea/
+/.vscode/
+/.gradle/

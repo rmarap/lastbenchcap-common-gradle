@@ -1,0 +1,31 @@
+name: Build and Test
+
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        
+    - name: Build and test
+      run: |
+        ./gradlew clean build
+        
+    - name: Show build results
+      run: |
+        echo "✅ Build and test completed successfully"
+        echo "📋 All tests passed"
+        echo "🔍 Code coverage and quality checks completed" 

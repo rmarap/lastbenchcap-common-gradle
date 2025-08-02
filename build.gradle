@@ -1,0 +1,146 @@
+// =============================================================================
+// LASTBENCHCAP COMMON GRADLE PLUGIN BUILD CONFIGURATION
+// =============================================================================
+// This build file contains all configuration for the Gradle plugin project.
+
+plugins {
+    id 'java-gradle-plugin'
+    id 'maven-publish'
+    id 'groovy'
+    id 'jacoco'
+}
+
+// Plugin configuration from gradle.properties
+group = project.findProperty('library.group') ?: 'com.lastbenchcap.common.gradle'
+version = project.findProperty('library.version') ?: '1.0.0'
+base {
+    archivesName = project.findProperty('library.artifactId') ?: project.name
+}
+
+// Version management
+ext {
+    libraryVersion = project.findProperty('library.version') ?: version
+    githubOwner = System.getenv('GITHUB_REPOSITORY_OWNER') ?: project.findProperty('github.owner') ?: 'rmarap'
+    githubRepo = System.getenv('GITHUB_REPOSITORY')?.split('/')?.last() ?: project.findProperty('github.repo') ?: project.name
+    libraryName = project.findProperty('library.name') ?: "${project.name} Plugin"
+    libraryDescription = project.findProperty('library.description') ?: "A Gradle plugin for ${project.name}"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+jar {
+    enabled = true
+}
+
+// Create sources JAR
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    archiveClassifier = 'sources'
+}
+
+// Create javadoc JAR
+task javadocJar(type: Jar) {
+    from javadoc
+    archiveClassifier = 'javadoc'
+}
+
+repositories {
+    mavenCentral()
+}
+
+// Plugin-specific dependencies
+dependencies {
+    implementation gradleApi()
+    implementation 'org.springframework.boot:spring-boot-gradle-plugin:3.2.2'
+    implementation 'io.spring.gradle:dependency-management-plugin:1.1.5'
+    
+    // For better plugin development and testing
+    testImplementation 'org.spockframework:spock-core:2.3-groovy-4.0'
+    testImplementation 'org.spockframework:spock-junit4:2.3-groovy-4.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+}
+
+gradlePlugin {
+    plugins {
+        commonLibraryPlugin {
+            id = 'com.lastbenchcap.common.gradle.library'
+            implementationClass = 'com.lastbenchcap.common.gradle.CommonLibraryPlugin'
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+test {
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        csv.required = true
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifactId = project.findProperty('library.artifactId') ?: project.name
+            version = libraryVersion
+            
+            artifact sourcesJar
+            artifact javadocJar
+            
+            pom {
+                name = libraryName
+                description = libraryDescription
+                url = "https://github.com/${githubOwner}/${githubRepo}"
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+                developers {
+                    developer {
+                        id = githubOwner
+                        name = 'LastBenchCap Team'
+                        email = 'team@lastbenchcap.com'
+                    }
+                }
+                scm {
+                    connection = "scm:git:git://github.com/${githubOwner}/${githubRepo}.git"
+                    developerConnection = "scm:git:ssh://github.com/${githubOwner}/${githubRepo}.git"
+                    url = "https://github.com/${githubOwner}/${githubRepo}"
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/${githubOwner}/${githubRepo}")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME") ?: System.getenv("USERNAME") ?: "github"
+                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN") ?: System.getenv("TOKEN") ?: ""
+            }
+        }
+    }
+}
