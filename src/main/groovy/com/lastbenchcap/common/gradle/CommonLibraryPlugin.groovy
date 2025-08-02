@@ -7,6 +7,7 @@ import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.testing.jacoco.plugins.JacocoPlugin
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 import org.gradle.api.tasks.bundling.Jar
+import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 class CommonLibraryPlugin implements Plugin<Project> {
     
@@ -126,7 +127,7 @@ class CommonLibraryPlugin implements Plugin<Project> {
     private void configurePublishing(Project project) {
         project.publishing {
             publications {
-                mavenJava(MavenPublication) {
+                mavenJava(org.gradle.api.publish.maven.MavenPublication) {
                     from project.components.java
                     artifactId = project.findProperty('library.artifactId') ?: project.name
                     version = project.libraryVersion
@@ -162,7 +163,7 @@ class CommonLibraryPlugin implements Plugin<Project> {
             repositories {
                 maven {
                     name = "GitHubPackages"
-                    url = uri("https://maven.pkg.github.com/${project.githubOwner}/${project.githubRepo}")
+                    url = "https://maven.pkg.github.com/${project.githubOwner}/${project.githubRepo}"
                     credentials {
                         username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME") ?: System.getenv("USERNAME") ?: "github"
                         password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN") ?: System.getenv("TOKEN") ?: ""
