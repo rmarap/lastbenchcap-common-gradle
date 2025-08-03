@@ -66,9 +66,10 @@ dependencies {
 }
 
 gradlePlugin {
+    isAutomatedPublishing = false // Disable automated plugin publishing
     plugins {
         commonLibraryPlugin {
-            id = 'com.lastbenchcap.common.gradle' // This ID is used to apply the plugin in build.gradle
+            id = 'com.lastbenchcap.common.gradle'
             implementationClass = 'com.lastbenchcap.common.gradle.CommonLibraryPlugin'
             displayName = 'LastBenchCap Common Gradle Library Plugin'
             description = 'A Gradle plugin that provides common configuration for LastBenchCap libraries'
@@ -102,14 +103,36 @@ jacocoTestReport {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        mainPlugin(MavenPublication) {
             from components.java
-            groupId = project.findProperty('library.group') ?: 'com.lastbenchcap'
-            artifactId = project.findProperty('library.artifactId') ?: 'common.gradle'
+            groupId = 'com.lastbenchcap'
+            artifactId = 'common.gradle'
             version = libraryVersion
             
             artifact sourcesJar
             artifact javadocJar
+        }
+        
+        // Manually create the plugin marker artifact
+        pluginMarker(MavenPublication) {
+            groupId = 'com.lastbenchcap.common.gradle'
+            artifactId = 'com.lastbenchcap.common.gradle.gradle.plugin'
+            version = libraryVersion
+            
+            pom {
+                name = 'LastBenchCap Common Gradle Plugin Marker'
+                description = 'Gradle plugin marker for LastBenchCap Common Gradle Plugin'
+                
+                dependencies {
+                    // Point to the main plugin artifact
+                    dependency {
+                        groupId = 'com.lastbenchcap'
+                        artifactId = 'common.gradle'
+                        version = libraryVersion
+                    }
+                }
+            }
+        }
             
             pom {
                 name = libraryName
