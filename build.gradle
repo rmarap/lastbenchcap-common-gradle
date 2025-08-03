@@ -1,8 +1,3 @@
-// =============================================================================
-// LASTBENCHCAP COMMON GRADLE PLUGIN BUILD CONFIGURATION
-// =============================================================================
-// This build file contains all configuration for the Gradle plugin project.
-
 plugins {
     id 'java-gradle-plugin'
     id 'maven-publish'
@@ -111,28 +106,6 @@ publishing {
             
             artifact sourcesJar
             artifact javadocJar
-        }
-        
-        // Manually create the plugin marker artifact
-        pluginMarker(MavenPublication) {
-            groupId = 'com.lastbenchcap.common.gradle'
-            artifactId = 'com.lastbenchcap.common.gradle.gradle.plugin'
-            version = libraryVersion
-            
-            pom {
-                name = 'LastBenchCap Common Gradle Plugin Marker'
-                description = 'Gradle plugin marker for LastBenchCap Common Gradle Plugin'
-                
-                dependencies {
-                    // Point to the main plugin artifact
-                    dependency {
-                        groupId = 'com.lastbenchcap'
-                        artifactId = 'common.gradle'
-                        version = libraryVersion
-                    }
-                }
-            }
-        }
             
             pom {
                 name = libraryName
@@ -155,6 +128,27 @@ publishing {
                     connection = "scm:git:git://github.com/${githubOwner}/${githubRepo}.git"
                     developerConnection = "scm:git:ssh://github.com/${githubOwner}/${githubRepo}.git"
                     url = "https://github.com/${githubOwner}/${githubRepo}"
+                }
+            }
+        }
+        
+        // Manually create the plugin marker artifact
+        pluginMarker(MavenPublication) {
+            groupId = 'com.lastbenchcap.common.gradle'
+            artifactId = 'com.lastbenchcap.common.gradle.gradle.plugin'
+            version = libraryVersion
+            
+            pom {
+                name = 'LastBenchCap Common Gradle Plugin Marker'
+                description = 'Gradle plugin marker for LastBenchCap Common Gradle Plugin'
+                
+                dependencies {
+                    // Point to the main plugin artifact
+                    dependency {
+                        groupId = 'com.lastbenchcap'
+                        artifactId = 'common.gradle'
+                        version = libraryVersion
+                    }
                 }
             }
         }
