@@ -102,7 +102,7 @@ jacocoTestReport {
 
 publishing {
     publications {
-        pluginMaven(MavenPublication) {
+        mavenJava(MavenPublication) {
             from components.java
             groupId = project.findProperty('library.group') ?: 'com.lastbenchcap'
             artifactId = project.findProperty('library.artifactId') ?: 'common.gradle'
