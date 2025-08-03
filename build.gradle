@@ -61,7 +61,6 @@ dependencies {
 }
 
 gradlePlugin {
-    isAutomatedPublishing = false // Disable automated plugin publishing
     plugins {
         commonLibraryPlugin {
             id = 'com.lastbenchcap.common.gradle'
@@ -70,6 +69,15 @@ gradlePlugin {
             description = 'A Gradle plugin that provides common configuration for LastBenchCap libraries'
         }
     }
+}
+
+// Disable the default plugin publication
+tasks.withType(PublishToMavenRepository).configureEach {
+    onlyIf { publication == publishing.publications.mainPlugin || publication == publishing.publications.pluginMarker }
+}
+
+tasks.withType(GenerateModuleMetadata).configureEach {
+    onlyIf { publication == publishing.publications.mainPlugin || publication == publishing.publications.pluginMarker }
 }
 
 test {
