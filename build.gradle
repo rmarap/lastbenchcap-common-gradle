@@ -146,18 +146,13 @@ publishing {
             artifactId = 'com.lastbenchcap.common.gradle.gradle.plugin'
             version = libraryVersion
             
-            pom {
-                name = 'LastBenchCap Common Gradle Plugin Marker'
-                description = 'Gradle plugin marker for LastBenchCap Common Gradle Plugin'
-                
-                dependencies {
-                    // Point to the main plugin artifact
-                    dependency {
-                        groupId = 'com.lastbenchcap'
-                        artifactId = 'common.gradle'
-                        version = libraryVersion
-                    }
-                }
+            pom.withXml {
+                def root = asNode()
+                def deps = root.appendNode('dependencies')
+                def dep = deps.appendNode('dependency')
+                dep.appendNode('groupId', 'com.lastbenchcap')
+                dep.appendNode('artifactId', 'common.gradle')
+                dep.appendNode('version', libraryVersion)
             }
         }
     }
