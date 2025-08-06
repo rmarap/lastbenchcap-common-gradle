@@ -97,35 +97,39 @@ jacocoTestReport {
 
 publishing {
     publications {
-        withType(PluginPublication).configureEach {
-            groupId = 'com.lastbenchcap'
-            artifactId = 'common.gradle'
-            version = libraryVersion
-            
-            artifact sourcesJar
-            artifact javadocJar
-            
-            pom {
-                name = libraryName
-                description = libraryDescription
-                url = "https://github.com/${githubOwner}/${githubRepo}"
-                licenses {
-                    license {
-                        name = 'MIT License'
-                        url = 'https://opensource.org/licenses/MIT'
-                    }
-                }
-                developers {
-                    developer {
-                        id = githubOwner
-                        name = 'LastBenchCap Team'
-                        email = 'team@lastbenchcap.com'
-                    }
-                }
-                scm {
-                    connection = "scm:git:git://github.com/${githubOwner}/${githubRepo}.git"
-                    developerConnection = "scm:git:ssh://github.com/${githubOwner}/${githubRepo}.git"
+        // The java-gradle-plugin automatically creates the plugin publication
+        // We just need to configure additional artifacts and metadata
+        withType(MavenPublication) { publication ->
+            if (publication.name == 'pluginMaven') {
+                groupId = 'com.lastbenchcap'
+                artifactId = 'common.gradle'
+                version = libraryVersion
+                
+                artifact sourcesJar
+                artifact javadocJar
+                
+                pom {
+                    name = libraryName
+                    description = libraryDescription
                     url = "https://github.com/${githubOwner}/${githubRepo}"
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://opensource.org/licenses/MIT'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = githubOwner
+                            name = 'LastBenchCap Team'
+                            email = 'team@lastbenchcap.com'
+                        }
+                    }
+                    scm {
+                        connection = "scm:git:git://github.com/${githubOwner}/${githubRepo}.git"
+                        developerConnection = "scm:git:ssh://github.com/${githubOwner}/${githubRepo}.git"
+                        url = "https://github.com/${githubOwner}/${githubRepo}"
+                    }
                 }
             }
         }
