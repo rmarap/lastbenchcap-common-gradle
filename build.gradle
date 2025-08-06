@@ -100,10 +100,9 @@ publishing {
         // The java-gradle-plugin automatically creates the plugin publication
         // We just need to configure additional artifacts and metadata
         withType(MavenPublication) { publication ->
-            if (publication.name == 'pluginMaven') {
-                groupId = 'com.lastbenchcap'
-                artifactId = 'common.gradle'
-                version = libraryVersion
+            groupId = 'com.lastbenchcap'
+            artifactId = 'common.gradle'
+            version = libraryVersion
                 
                 artifact sourcesJar
                 artifact javadocJar
