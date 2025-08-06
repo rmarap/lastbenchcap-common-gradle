@@ -103,32 +103,31 @@ publishing {
             groupId = 'com.lastbenchcap'
             artifactId = 'common.gradle'
             version = libraryVersion
-                
-                artifact sourcesJar
-                artifact javadocJar
-                
-                pom {
-                    name = libraryName
-                    description = libraryDescription
+            
+            artifact sourcesJar
+            artifact javadocJar
+            
+            pom {
+                name = libraryName
+                description = libraryDescription
+                url = "https://github.com/${githubOwner}/${githubRepo}"
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+                developers {
+                    developer {
+                        id = githubOwner
+                        name = 'LastBenchCap Team'
+                        email = 'team@lastbenchcap.com'
+                    }
+                }
+                scm {
+                    connection = "scm:git:git://github.com/${githubOwner}/${githubRepo}.git"
+                    developerConnection = "scm:git:ssh://github.com/${githubOwner}/${githubRepo}.git"
                     url = "https://github.com/${githubOwner}/${githubRepo}"
-                    licenses {
-                        license {
-                            name = 'MIT License'
-                            url = 'https://opensource.org/licenses/MIT'
-                        }
-                    }
-                    developers {
-                        developer {
-                            id = githubOwner
-                            name = 'LastBenchCap Team'
-                            email = 'team@lastbenchcap.com'
-                        }
-                    }
-                    scm {
-                        connection = "scm:git:git://github.com/${githubOwner}/${githubRepo}.git"
-                        developerConnection = "scm:git:ssh://github.com/${githubOwner}/${githubRepo}.git"
-                        url = "https://github.com/${githubOwner}/${githubRepo}"
-                    }
                 }
             }
         }
