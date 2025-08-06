@@ -6,7 +6,7 @@ plugins {
 }
 
 // Plugin configuration from gradle.properties
-group = 'com.lastbenchcap.common.gradle'  // Must match plugin ID namespace
+group = 'com.lastbenchcap'  // Organization's standard group ID
 version = project.findProperty('library.version') ?: '1.0.0'
 base {
     archivesName = 'common.gradle'  // Fixed artifact ID
@@ -101,12 +101,11 @@ jacocoTestReport {
 
 publishing {
     publications {
-        // The java-gradle-plugin automatically creates the plugin publication
-        // We just need to configure additional artifacts and metadata
-        pluginMaven(MavenPublication) {
-            // For plugin marker artifact, group ID must match plugin ID namespace
-            groupId = 'com.lastbenchcap.common.gradle'
-            artifactId = 'com.lastbenchcap.common.gradle.gradle.plugin'
+        // Let java-gradle-plugin handle the plugin marker publication
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId = 'com.lastbenchcap'  // Organization's standard group ID
+            artifactId = 'common.gradle'
             version = libraryVersion
             
             artifact sourcesJar
