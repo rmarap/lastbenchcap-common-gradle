@@ -6,7 +6,7 @@ plugins {
 }
 
 // Plugin configuration from gradle.properties
-group = 'com.lastbenchcap'  // Fixed group for consistency
+group = 'com.lastbenchcap.common.gradle'  // Must match plugin ID namespace
 version = project.findProperty('library.version') ?: '1.0.0'
 base {
     archivesName = 'common.gradle'  // Fixed artifact ID
@@ -61,12 +61,16 @@ dependencies {
 }
 
 gradlePlugin {
+    website = 'https://github.com/rmarap/lastbenchcap-common-gradle'
+    vcsUrl = 'https://github.com/rmarap/lastbenchcap-common-gradle.git'
+    
     plugins {
         commonLibraryPlugin {
             id = 'com.lastbenchcap.common.gradle'
             implementationClass = 'com.lastbenchcap.common.gradle.CommonLibraryPlugin'
             displayName = 'LastBenchCap Common Gradle Library Plugin'
             description = 'A Gradle plugin that provides common configuration for LastBenchCap libraries'
+            tags.set(['lastbenchcap', 'common', 'gradle'])
         }
     }
 }
@@ -99,9 +103,10 @@ publishing {
     publications {
         // The java-gradle-plugin automatically creates the plugin publication
         // We just need to configure additional artifacts and metadata
-        withType(MavenPublication) { publication ->
-            groupId = 'com.lastbenchcap'
-            artifactId = 'common.gradle'
+        pluginMaven(MavenPublication) {
+            // For plugin marker artifact, group ID must match plugin ID namespace
+            groupId = 'com.lastbenchcap.common.gradle'
+            artifactId = 'com.lastbenchcap.common.gradle.gradle.plugin'
             version = libraryVersion
             
             artifact sourcesJar
