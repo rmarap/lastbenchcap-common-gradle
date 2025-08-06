@@ -101,16 +101,13 @@ jacocoTestReport {
 
 publishing {
     publications {
-        // Let java-gradle-plugin handle the plugin marker publication
         mavenJava(MavenPublication) {
             from components.java
-            groupId = 'com.lastbenchcap'  // Organization's standard group ID
+            groupId = 'com.lastbenchcap'
             artifactId = 'common.gradle'
-            version = libraryVersion
-            
+            version = project.version
             artifact sourcesJar
             artifact javadocJar
-            
             pom {
                 name = libraryName
                 description = libraryDescription
