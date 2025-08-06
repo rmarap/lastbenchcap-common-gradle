@@ -71,15 +71,6 @@ gradlePlugin {
     }
 }
 
-// Disable the default plugin publication
-tasks.withType(PublishToMavenRepository).configureEach {
-    onlyIf { publication == publishing.publications.mainPlugin || publication == publishing.publications.pluginMarker }
-}
-
-tasks.withType(GenerateModuleMetadata).configureEach {
-    onlyIf { publication == publishing.publications.mainPlugin || publication == publishing.publications.pluginMarker }
-}
-
 test {
     useJUnitPlatform()
     testLogging {
@@ -106,8 +97,7 @@ jacocoTestReport {
 
 publishing {
     publications {
-        mainPlugin(MavenPublication) {
-            from components.java
+        withType(PluginPublication).configureEach {
             groupId = 'com.lastbenchcap'
             artifactId = 'common.gradle'
             version = libraryVersion
@@ -137,22 +127,6 @@ publishing {
                     developerConnection = "scm:git:ssh://github.com/${githubOwner}/${githubRepo}.git"
                     url = "https://github.com/${githubOwner}/${githubRepo}"
                 }
-            }
-        }
-        
-        // Manually create the plugin marker artifact
-        pluginMarker(MavenPublication) {
-            groupId = 'com.lastbenchcap.common.gradle'
-            artifactId = 'com.lastbenchcap.common.gradle.gradle.plugin'
-            version = libraryVersion
-            
-            pom.withXml {
-                def root = asNode()
-                def deps = root.appendNode('dependencies')
-                def dep = deps.appendNode('dependency')
-                dep.appendNode('groupId', 'com.lastbenchcap')
-                dep.appendNode('artifactId', 'common.gradle')
-                dep.appendNode('version', libraryVersion)
             }
         }
     }
