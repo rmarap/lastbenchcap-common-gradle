@@ -6,10 +6,10 @@ plugins {
 }
 
 // Plugin configuration from gradle.properties
-group = project.findProperty('library.group') ?: 'com.lastbenchcap.common.gradle'
+group = 'com.lastbenchcap'  // Fixed group for consistency
 version = project.findProperty('library.version') ?: '1.0.0'
 base {
-    archivesName = project.findProperty('library.artifactId') ?: project.name
+    archivesName = 'common.gradle'  // Fixed artifact ID
 }
 
 // Version management
