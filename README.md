@@ -16,7 +16,7 @@ A Gradle plugin that provides common configuration for LastBenchCap libraries, m
 
 ```gradle
 plugins {
-    id 'com.lastbenchcap.common.gradle.library' version '1.0.0'
+    id 'com.lastbenchcap.common.gradle' version '+'
 }
 
 // Optional: Add library-specific dependencies
@@ -52,7 +52,7 @@ Add to your `settings.gradle`:
 pluginManagement {
     repositories {
         maven {
-            url = uri("https://maven.pkg.github.com/rmarap/com.lastbenchcap.common.gradle")
+            url = uri("https://maven.pkg.github.com/rmarap/lastbenchcap-common-gradle")
             credentials {
                 username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
                 password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
@@ -70,11 +70,11 @@ For local development, you can use the plugin directly:
 
 ```gradle
 // In settings.gradle
-includeBuild '/Users/rammarappan/Projects/spikes-2025/com.lastbenchcap.common.gradle'
+includeBuild '/Users/rammarappan/Projects/spikes-2025/lastbenchcap-common-gradle'
 
 // In build.gradle
 plugins {
-    id 'com.lastbenchcap.common.gradle.library'
+    id 'com.lastbenchcap.common.gradle'
 }
 ```
 
@@ -107,7 +107,7 @@ plugins {
 ### Building the Plugin
 
 ```bash
-cd /Users/rammarappan/Projects/spikes-2025/com.lastbenchcap.common.gradle
+cd /Users/rammarappan/Projects/spikes-2025/lastbenchcap-common-gradle
 ./gradlew build
 ```
 
@@ -125,6 +125,7 @@ cd /Users/rammarappan/Projects/spikes-2025/com.lastbenchcap.common.gradle
 
 ## Version History
 
+- `1.0.23` - Updated artifactId to `common-gradle`, improved configuration
 - `1.0.0` - Initial release with common library configuration
 
 ## License
