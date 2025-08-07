@@ -14,11 +14,19 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set up JDK 21
+    - name: Get Java configuration
+      id: java_config
+      run: |
+        JAVA_VERSION=$(grep 'java.version=' gradle.properties | cut -d'=' -f2 || echo '21')
+        JAVA_DISTRIBUTION=$(grep 'java.distribution=' gradle.properties | cut -d'=' -f2 || echo 'temurin')
+        echo "java_version=$JAVA_VERSION" >> $GITHUB_OUTPUT
+        echo "java_distribution=$JAVA_DISTRIBUTION" >> $GITHUB_OUTPUT
+        echo "Using Java $JAVA_VERSION ($JAVA_DISTRIBUTION)"
+    - name: Set up JDK
       uses: actions/setup-java@v4
       with:
-        java-version: '21'
-        distribution: 'temurin'
+        java-version: '${{ steps.java_config.outputs.java_version }}'
+        distribution: '${{ steps.java_config.outputs.java_distribution }}'
         
     - name: Build and test
       run: |

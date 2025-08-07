@@ -6,10 +6,10 @@ plugins {
 }
 
 // Plugin configuration from gradle.properties
-group = 'com.lastbenchcap'  // Organization's standard group ID
+group = project.findProperty('library.group') ?: 'com.lastbenchcap'
 version = project.findProperty('library.version') ?: '1.0.0'
 base {
-    archivesName = 'common.gradle'  // Fixed artifact ID
+    archivesName = project.findProperty('library.artifactId') ?: 'common.gradle'
 }
 
 // Version management
@@ -22,8 +22,9 @@ ext {
 }
 
 java {
+    def javaVersion = project.findProperty('java.version') ?: '21'
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(Integer.parseInt(javaVersion.toString()))
     }
 }
 
@@ -50,8 +51,8 @@ repositories {
 // Plugin-specific dependencies
 dependencies {
     implementation gradleApi()
-    implementation 'org.springframework.boot:spring-boot-gradle-plugin:3.2.2'
-    implementation 'io.spring.gradle:dependency-management-plugin:1.1.5'
+    implementation "org.springframework.boot:spring-boot-gradle-plugin:${project.findProperty('spring.boot.gradle.plugin.version') ?: '3.2.2'}"
+    implementation "io.spring.gradle:dependency-management-plugin:${project.findProperty('dependency.management.plugin.version') ?: '1.1.5'}"
     
     // For better plugin development and testing
     testImplementation 'org.spockframework:spock-core:2.3-groovy-4.0'
@@ -61,8 +62,8 @@ dependencies {
 }
 
 gradlePlugin {
-    website = 'https://github.com/rmarap/lastbenchcap-common-gradle'
-    vcsUrl = 'https://github.com/rmarap/lastbenchcap-common-gradle.git'
+    website = "https://github.com/${githubOwner}/${githubRepo}"
+    vcsUrl = "https://github.com/${githubOwner}/${githubRepo}.git"
     
     plugins {
         commonLibraryPlugin {
@@ -83,7 +84,7 @@ test {
 }
 
 jacoco {
-    toolVersion = "0.8.11"
+    toolVersion = project.findProperty('jacoco.tool.version') ?: "0.8.11"
 }
 
 test {
@@ -103,8 +104,8 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
-            groupId = 'com.lastbenchcap'
-            artifactId = 'common.gradle'
+            groupId = project.findProperty('library.group') ?: 'com.lastbenchcap'
+            artifactId = project.findProperty('library.artifactId') ?: 'common.gradle'
             version = project.version
             artifact sourcesJar
             artifact javadocJar
@@ -114,15 +115,15 @@ publishing {
                 url = "https://github.com/${githubOwner}/${githubRepo}"
                 licenses {
                     license {
-                        name = 'MIT License'
-                        url = 'https://opensource.org/licenses/MIT'
+                        name = project.findProperty('license.name') ?: 'MIT License'
+                        url = project.findProperty('license.url') ?: 'https://opensource.org/licenses/MIT'
                     }
                 }
                 developers {
                     developer {
-                        id = githubOwner
-                        name = 'LastBenchCap Team'
-                        email = 'team@lastbenchcap.com'
+                        id = project.findProperty('developer.id') ?: githubOwner
+                        name = project.findProperty('developer.name') ?: 'LastBenchCap Team'
+                        email = project.findProperty('developer.email') ?: 'team@lastbenchcap.com'
                     }
                 }
                 scm {

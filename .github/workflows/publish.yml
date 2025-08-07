@@ -22,9 +22,15 @@ on:
         required: false
         type: string
 
+permissions:
+  packages: write
+  contents: write
+
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     steps:
     - name: Checkout code
@@ -33,11 +39,19 @@ jobs:
         fetch-depth: 0  # Required for git history
         token: ${{ secrets.GITHUB_TOKEN }}
       
-    - name: Set up JDK 21
+    - name: Get Java configuration
+      id: java_config
+      run: |
+        JAVA_VERSION=$(grep 'java.version=' gradle.properties | cut -d'=' -f2 || echo '21')
+        JAVA_DISTRIBUTION=$(grep 'java.distribution=' gradle.properties | cut -d'=' -f2 || echo 'temurin')
+        echo "java_version=$JAVA_VERSION" >> $GITHUB_OUTPUT
+        echo "java_distribution=$JAVA_DISTRIBUTION" >> $GITHUB_OUTPUT
+        echo "Using Java $JAVA_VERSION ($JAVA_DISTRIBUTION)"
+    - name: Set up JDK
       uses: actions/setup-java@v4
       with:
-        java-version: '21'
-        distribution: 'temurin'
+        java-version: '${{ steps.java_config.outputs.java_version }}'
+        distribution: '${{ steps.java_config.outputs.java_distribution }}'
         
     - name: Configure Git
       run: |
@@ -159,12 +173,12 @@ jobs:
         git push origin "v${{ steps.new_version.outputs.new_version }}"
         echo "Created and pushed tag v${{ steps.new_version.outputs.new_version }}"
         
-    - name: Debug repository information
+    - name: Print publishing information
       run: |
-        echo "GitHub Repository: ${{ github.repository }}"
-        echo "GitHub Repository Owner: ${{ github.repository_owner }}"
-        echo "GitHub Repository Name: ${{ github.event.repository.name }}"
-        echo "Publishing version: ${{ steps.new_version.outputs.new_version }}"
+        echo "Publishing to: ${{ github.repository }}"
+        echo "Group ID: $(grep 'library.group=' gradle.properties | cut -d'=' -f2)"
+        echo "Artifact ID: $(grep 'library.artifactId=' gradle.properties | cut -d'=' -f2)"
+        echo "Version: ${{ steps.new_version.outputs.new_version }}"
         
     - name: Publish to GitHub Packages
       env:
@@ -208,7 +222,9 @@ jobs:
     - name: Show build results
       run: |
         echo "✅ Build completed successfully"
-        echo "📦 Package: com.lastbenchcap.common.gradle:com.lastbenchcap.common.gradle:${{ steps.new_version.outputs.new_version }}"
+        GROUP_ID=$(grep 'library.group=' gradle.properties | cut -d'=' -f2)
+        ARTIFACT_ID=$(grep 'library.artifactId=' gradle.properties | cut -d'=' -f2)
+        echo "📦 Package: ${GROUP_ID}:${ARTIFACT_ID}:${{ steps.new_version.outputs.new_version }}"
         echo "🔗 Repository: https://maven.pkg.github.com/${{ github.repository }}"
         if [ "${{ steps.new_version.outputs.new_version_type }}" = "release" ]; then
           echo "🏷️  Git tag: v${{ steps.new_version.outputs.new_version }}"
