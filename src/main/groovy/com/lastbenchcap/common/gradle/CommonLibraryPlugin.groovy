@@ -44,9 +44,10 @@ class CommonLibraryPlugin implements Plugin<Project> {
         }
         
         // Java configuration
+        def javaVersion = project.findProperty('java.version') ?: '21'
         project.java {
             toolchain {
-                languageVersion = JavaLanguageVersion.of(21)
+                languageVersion = JavaLanguageVersion.of(Integer.parseInt(javaVersion.toString()))
             }
         }
         
@@ -141,15 +142,15 @@ class CommonLibraryPlugin implements Plugin<Project> {
                         url = "https://github.com/${project.githubOwner}/${project.githubRepo}"
                         licenses {
                             license {
-                                name = 'MIT License'
-                                url = 'https://opensource.org/licenses/MIT'
+                                name = project.findProperty('license.name') ?: 'MIT License'
+                                url = project.findProperty('license.url') ?: 'https://opensource.org/licenses/MIT'
                             }
                         }
                         developers {
                             developer {
-                                id = project.githubOwner
-                                name = 'LastBenchCap Team'
-                                email = 'team@lastbenchcap.com'
+                                id = project.findProperty('developer.id') ?: project.githubOwner
+                                name = project.findProperty('developer.name') ?: 'LastBenchCap Team'
+                                email = project.findProperty('developer.email') ?: 'team@lastbenchcap.com'
                             }
                         }
                         scm {
