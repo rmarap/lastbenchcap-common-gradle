@@ -28,17 +28,17 @@ base {
 // Declare Gradle plugins provided by this project
 gradlePlugin {
     plugins {
-        create("commonLibrary") {
-            id.set('com.lastbenchcap.common.gradle')
-            implementationClass.set('com.lastbenchcap.common.gradle.CommonLibraryPlugin')
-            displayName.set(libraryName)
-            description.set(libraryDescription)
+        commonLibrary {
+            id = 'com.lastbenchcap.common.gradle'
+            implementationClass = 'com.lastbenchcap.common.gradle.CommonLibraryPlugin'
+            displayName = libraryName
+            description = libraryDescription
         }
-        create("repoManagementSettings") {
-            id.set('com.lastbenchcap.repo-management-settings')
-            implementationClass.set('com.lastbenchcap.common.gradle.RepoManagementSettingsPlugin')
-            displayName.set('LastBenchCap Repo Management Settings Plugin')
-            description.set('Centralizes repository configuration (GitHub Packages, mavenLocal, mavenCentral) in settings.gradle')
+        repoManagementSettings {
+            id = 'com.lastbenchcap.repo-management-settings'
+            implementationClass = 'com.lastbenchcap.common.gradle.RepoManagementSettingsPlugin'
+            displayName = 'LastBenchCap Repo Management Settings Plugin'
+            description = 'Centralizes repository configuration (GitHub Packages, mavenLocal, mavenCentral) in settings.gradle'
         }
     }
 }
@@ -94,7 +94,7 @@ tasks.named('jacocoTestReport') {
 
 publishing {
     publications {
-        create('mavenJava', MavenPublication) {
+        mavenJava(MavenPublication) {
             from components.java
             groupId = providers.gradleProperty('library.group').getOrElse('com.lastbenchcap')
             artifactId = providers.gradleProperty('library.artifactId').getOrElse(name)
@@ -102,26 +102,26 @@ publishing {
             artifact tasks.named('sourcesJar')
             artifact tasks.named('javadocJar')
             pom {
-                name.set(libraryName)
-                description.set(libraryDescription)
-                url.set("https://github.com/${githubOwner}/${githubRepo}")
+                name = libraryName
+                description = libraryDescription
+                url = "https://github.com/${githubOwner}/${githubRepo}"
                 licenses {
                     license {
-                        name.set(providers.gradleProperty('license.name').getOrElse('MIT License'))
-                        url.set(providers.gradleProperty('license.url').getOrElse('https://opensource.org/licenses/MIT'))
+                        name = providers.gradleProperty('license.name').getOrElse('MIT License')
+                        url = providers.gradleProperty('license.url').getOrElse('https://opensource.org/licenses/MIT')
                     }
                 }
                 developers {
                     developer {
-                        id.set(providers.gradleProperty('developer.id').getOrElse(githubOwner))
-                        name.set(providers.gradleProperty('developer.name').getOrElse('LastBenchCap Team'))
-                        email.set(providers.gradleProperty('developer.email').getOrElse('team@lastbenchcap.com'))
+                        id = providers.gradleProperty('developer.id').getOrElse(githubOwner)
+                        name = providers.gradleProperty('developer.name').getOrElse('LastBenchCap Team')
+                        email = providers.gradleProperty('developer.email').getOrElse('team@lastbenchcap.com')
                     }
                 }
                 scm {
-                    connection.set("scm:git:git://github.com/${githubOwner}/${githubRepo}.git")
-                    developerConnection.set("scm:git:ssh://github.com/${githubOwner}/${githubRepo}.git")
-                    url.set("https://github.com/${githubOwner}/${githubRepo}")
+                    connection = "scm:git:git://github.com/${githubOwner}/${githubRepo}.git"
+                    developerConnection = "scm:git:ssh://github.com/${githubOwner}/${githubRepo}.git"
+                    url = "https://github.com/${githubOwner}/${githubRepo}"
                 }
             }
         }
