@@ -3,9 +3,9 @@ package com.lastbenchcap.common.gradle
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaLibraryPlugin
+import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.testing.jacoco.plugins.JacocoPlugin
-import org.springframework.boot.gradle.plugin.SpringBootPlugin
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
@@ -17,7 +17,7 @@ class CommonLibraryPlugin implements Plugin<Project> {
         project.plugins.apply(JavaLibraryPlugin)
         project.plugins.apply(MavenPublishPlugin)
         project.plugins.apply(JacocoPlugin)
-        project.plugins.apply(SpringBootPlugin)
+        project.plugins.apply('org.springframework.boot')
         project.plugins.apply('io.spring.dependency-management')
         
         // Configure the project
@@ -62,13 +62,13 @@ class CommonLibraryPlugin implements Plugin<Project> {
         }
         
         // Create sources JAR
-        project.task('sourcesJar', type: Jar) {
+        tasks.register('sourcesJar', Jar) {
             from project.sourceSets.main.allSource
             archiveClassifier = 'sources'
         }
         
         // Create javadoc JAR
-        project.task('javadocJar', type: Jar) {
+        tasks.register('javadocJar', Jar) {
             from project.javadoc
             archiveClassifier = 'javadoc'
         }
@@ -128,7 +128,7 @@ class CommonLibraryPlugin implements Plugin<Project> {
     private void configurePublishing(Project project) {
         project.publishing {
             publications {
-                mavenJava(org.gradle.api.publish.maven.MavenPublication) {
+                mavenJava(MavenPublication) {
                     from project.components.java
                     artifactId = project.findProperty('library.artifactId') ?: project.name
                     version = project.libraryVersion

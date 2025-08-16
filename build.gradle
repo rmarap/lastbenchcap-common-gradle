@@ -6,40 +6,57 @@ plugins {
 }
 
 // Plugin configuration from gradle.properties
-group = project.findProperty('library.group') ?: 'com.lastbenchcap'
-version = project.findProperty('library.version') ?: '1.0.0'
-base {
-    archivesName = project.findProperty('library.artifactId') ?: 'common.gradle'
-}
+group = providers.gradleProperty('library.group').getOrElse('com.lastbenchcap')
+version = providers.gradleProperty('library.version').getOrElse('1.0.0')
 
 // Version management
-ext {
-    libraryVersion = project.findProperty('library.version') ?: version
-    githubOwner = System.getenv('GITHUB_REPOSITORY_OWNER') ?: project.findProperty('github.owner') ?: 'rmarap'
-    githubRepo = System.getenv('GITHUB_REPOSITORY')?.split('/')?.last() ?: project.findProperty('github.repo') ?: project.name
-    libraryName = project.findProperty('library.name') ?: "${project.name} Plugin"
-    libraryDescription = project.findProperty('library.description') ?: "A Gradle plugin for ${project.name}"
+final String libraryVersion = providers.gradleProperty('library.version').getOrElse(version)
+final String githubOwner = providers.environmentVariable('GITHUB_REPOSITORY_OWNER')
+    .orElse(providers.gradleProperty('github.owner').orElse('rmarap'))
+    .get()
+final String githubRepo = providers.environmentVariable('GITHUB_REPOSITORY')
+    .map { it.split('/').last() }
+    .orElse(providers.gradleProperty('github.repo').orElse(name))
+    .get()
+final String libraryName = providers.gradleProperty('library.name').getOrElse("${name} Plugin")
+final String libraryDescription = providers.gradleProperty('library.description').getOrElse("A Gradle plugin for ${name}")
+
+base {
+    archivesName = providers.gradleProperty('library.artifactId').getOrElse(name)
 }
 
-java {
-    def javaVersion = project.findProperty('java.version') ?: '21'
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(Integer.parseInt(javaVersion.toString()))
+// Declare Gradle plugins provided by this project
+gradlePlugin {
+    plugins {
+        create("commonLibrary") {
+            id.set('com.lastbenchcap.common.gradle')
+            implementationClass.set('com.lastbenchcap.common.gradle.CommonLibraryPlugin')
+            displayName.set(libraryName)
+            description.set(libraryDescription)
+        }
+        create("repoManagementSettings") {
+            id.set('com.lastbenchcap.repo-management-settings')
+            implementationClass.set('com.lastbenchcap.common.gradle.RepoManagementSettingsPlugin')
+            displayName.set('LastBenchCap Repo Management Settings Plugin')
+            description.set('Centralizes repository configuration (GitHub Packages, mavenLocal, mavenCentral) in settings.gradle')
+        }
     }
 }
 
-jar {
-    enabled = true
+java {
+    def javaVersion = providers.gradleProperty('java.version').getOrElse('21')
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(Integer.parseInt(javaVersion))
+    }
 }
 
-// Create sources JAR
-task sourcesJar(type: Jar) {
+// Register tasks for creating source and javadoc JARs
+tasks.register('sourcesJar', Jar) {
     from sourceSets.main.allSource
     archiveClassifier = 'sources'
 }
 
-// Create javadoc JAR
-task javadocJar(type: Jar) {
+tasks.register('javadocJar', Jar) {
     from javadoc
     archiveClassifier = 'javadoc'
 }
@@ -51,48 +68,23 @@ repositories {
 // Plugin-specific dependencies
 dependencies {
     implementation gradleApi()
-    implementation "org.springframework.boot:spring-boot-gradle-plugin:${project.findProperty('spring.boot.gradle.plugin.version') ?: '3.2.2'}"
-    implementation "io.spring.gradle:dependency-management-plugin:${project.findProperty('dependency.management.plugin.version') ?: '1.1.5'}"
-    
-    // For better plugin development and testing
-    testImplementation 'org.spockframework:spock-core:2.3-groovy-4.0'
-    testImplementation 'org.spockframework:spock-junit4:2.3-groovy-4.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+    implementation localGroovy()
 }
 
-gradlePlugin {
-    website = "https://github.com/${githubOwner}/${githubRepo}"
-    vcsUrl = "https://github.com/${githubOwner}/${githubRepo}.git"
-    
-    plugins {
-        commonLibraryPlugin {
-            id = 'com.lastbenchcap.common.gradle'
-            implementationClass = 'com.lastbenchcap.common.gradle.CommonLibraryPlugin'
-            displayName = 'LastBenchCap Common Gradle Library Plugin'
-            description = 'A Gradle plugin that provides common configuration for LastBenchCap libraries'
-            tags.set(['lastbenchcap', 'common', 'gradle'])
-        }
-    }
-}
-
-test {
+tasks.named('test') {
     useJUnitPlatform()
     testLogging {
         events "passed", "skipped", "failed"
     }
+    finalizedBy tasks.named('jacocoTestReport')
 }
 
 jacoco {
-    toolVersion = project.findProperty('jacoco.tool.version') ?: "0.8.11"
+    toolVersion = providers.gradleProperty('jacoco.tool.version').getOrElse('0.8.11')
 }
 
-test {
-    finalizedBy jacocoTestReport
-}
-
-jacocoTestReport {
-    dependsOn test
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('test')
     reports {
         xml.required = true
         csv.required = true
@@ -102,34 +94,34 @@ jacocoTestReport {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        create('mavenJava', MavenPublication) {
             from components.java
-            groupId = project.findProperty('library.group') ?: 'com.lastbenchcap'
-            artifactId = project.findProperty('library.artifactId') ?: 'common.gradle'
-            version = project.version
-            artifact sourcesJar
-            artifact javadocJar
+            groupId = providers.gradleProperty('library.group').getOrElse('com.lastbenchcap')
+            artifactId = providers.gradleProperty('library.artifactId').getOrElse(name)
+            version = version
+            artifact tasks.named('sourcesJar')
+            artifact tasks.named('javadocJar')
             pom {
-                name = libraryName
-                description = libraryDescription
-                url = "https://github.com/${githubOwner}/${githubRepo}"
+                name.set(libraryName)
+                description.set(libraryDescription)
+                url.set("https://github.com/${githubOwner}/${githubRepo}")
                 licenses {
                     license {
-                        name = project.findProperty('license.name') ?: 'MIT License'
-                        url = project.findProperty('license.url') ?: 'https://opensource.org/licenses/MIT'
+                        name.set(providers.gradleProperty('license.name').getOrElse('MIT License'))
+                        url.set(providers.gradleProperty('license.url').getOrElse('https://opensource.org/licenses/MIT'))
                     }
                 }
                 developers {
                     developer {
-                        id = project.findProperty('developer.id') ?: githubOwner
-                        name = project.findProperty('developer.name') ?: 'LastBenchCap Team'
-                        email = project.findProperty('developer.email') ?: 'team@lastbenchcap.com'
+                        id.set(providers.gradleProperty('developer.id').getOrElse(githubOwner))
+                        name.set(providers.gradleProperty('developer.name').getOrElse('LastBenchCap Team'))
+                        email.set(providers.gradleProperty('developer.email').getOrElse('team@lastbenchcap.com'))
                     }
                 }
                 scm {
-                    connection = "scm:git:git://github.com/${githubOwner}/${githubRepo}.git"
-                    developerConnection = "scm:git:ssh://github.com/${githubOwner}/${githubRepo}.git"
-                    url = "https://github.com/${githubOwner}/${githubRepo}"
+                    connection.set("scm:git:git://github.com/${githubOwner}/${githubRepo}.git")
+                    developerConnection.set("scm:git:ssh://github.com/${githubOwner}/${githubRepo}.git")
+                    url.set("https://github.com/${githubOwner}/${githubRepo}")
                 }
             }
         }
@@ -139,8 +131,12 @@ publishing {
             name = "GitHubPackages"
             url = uri("https://maven.pkg.github.com/${githubOwner}/${githubRepo}")
             credentials {
-                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME") ?: System.getenv("USERNAME") ?: "github"
-                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN") ?: System.getenv("TOKEN") ?: ""
+                username = providers.gradleProperty("gpr.user")
+                    .orElse(providers.environmentVariable("GITHUB_USERNAME").orElse(providers.environmentVariable("USERNAME").orElse("github")))
+                    .get()
+                password = providers.gradleProperty("gpr.key")
+                    .orElse(providers.environmentVariable("GITHUB_TOKEN").orElse(providers.environmentVariable("TOKEN").orElse("")))
+                    .get()
             }
         }
     }
