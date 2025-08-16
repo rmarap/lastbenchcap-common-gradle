@@ -69,6 +69,10 @@ repositories {
 dependencies {
     implementation gradleApi()
     implementation localGroovy()
+    
+    // Spring Boot plugin dependencies - required for CommonLibraryPlugin
+    implementation "org.springframework.boot:spring-boot-gradle-plugin:${providers.gradleProperty('spring.boot.gradle.plugin.version').getOrElse('3.2.2')}"
+    implementation "io.spring.gradle:dependency-management-plugin:${providers.gradleProperty('dependency.management.plugin.version').getOrElse('1.1.5')}"
 }
 
 tasks.named('test') {
