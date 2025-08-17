@@ -73,10 +73,7 @@ class CommonLibraryPlugin implements Plugin<Project> {
             archiveClassifier = 'javadoc'
         }
         
-        // Repositories
-        project.repositories {
-            mavenCentral()
-        }
+        // Repositories are now handled by RepoManagementSettingsPlugin
     }
     
     private void configureDependencies(Project project) {
