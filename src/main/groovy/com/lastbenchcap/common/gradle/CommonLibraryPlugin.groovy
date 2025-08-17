@@ -62,13 +62,13 @@ class CommonLibraryPlugin implements Plugin<Project> {
         }
         
         // Create sources JAR
-        tasks.register('sourcesJar', Jar) {
+        project.tasks.register('sourcesJar', Jar) {
             from project.sourceSets.main.allSource
             archiveClassifier = 'sources'
         }
         
         // Create javadoc JAR
-        tasks.register('javadocJar', Jar) {
+        project.tasks.register('javadocJar', Jar) {
             from project.javadoc
             archiveClassifier = 'javadoc'
         }
