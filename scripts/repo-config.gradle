@@ -1,0 +1,40 @@
+// LastBenchCap Repository Configuration Script
+// This script provides repository configuration for both local development and CI environments
+
+// Try to use the repo-management-settings plugin if available
+try {
+    plugins {
+        id 'com.lastbenchcap.repo-management-settings'
+    }
+    println "Using repo-management-settings plugin"
+} catch (Exception e) {
+    // Plugin not available, configure repositories manually
+    println "Repo management plugin not available, configuring repositories manually"
+    
+    dependencyResolutionManagement {
+        repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+        repositories {
+            mavenLocal()
+            
+            // GitHub Packages repositories
+            def ghOwner = "rmarap"
+            def repos = ["lastbenchcap-common", "lastbenchcap-common-gradle"]
+            
+            repos.each { String repoName ->
+                maven {
+                    name = "GitHubPackages-${repoName}"
+                    url = uri("https://maven.pkg.github.com/${ghOwner}/${repoName}")
+                    credentials {
+                        username = System.getenv("GITHUB_USERNAME") ?: System.getenv("USERNAME") ?: "github"
+                        password = System.getenv("GITHUB_TOKEN") ?: System.getenv("TOKEN") ?: ""
+                    }
+                    content {
+                        includeGroup('com.lastbenchcap')
+                    }
+                }
+            }
+            
+            mavenCentral()
+        }
+    }
+}

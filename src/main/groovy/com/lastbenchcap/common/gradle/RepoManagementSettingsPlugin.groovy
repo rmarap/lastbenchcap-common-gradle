@@ -14,6 +14,16 @@ import org.gradle.api.initialization.resolve.RepositoriesMode
 class RepoManagementSettingsPlugin implements Plugin<Settings> {
     @Override
     void apply(Settings settings) {
+        try {
+            configureWithPlugin(settings)
+        } catch (Exception e) {
+            // Fallback to manual configuration if plugin approach fails
+            println "Plugin configuration failed, using fallback repository configuration"
+            configureFallback(settings)
+        }
+    }
+    
+    private void configureWithPlugin(Settings settings) {
         def ghOwner = System.getenv('GITHUB_REPOSITORY_OWNER')
                 ?: settings.providers.gradleProperty('lastbenchcap.github.owner').orNull
                 ?: settings.providers.gradleProperty('github.owner').orNull
@@ -22,6 +32,7 @@ class RepoManagementSettingsPlugin implements Plugin<Settings> {
         def reposFileProp = settings.providers.gradleProperty('lastbenchcap.github.repos.file').orNull
                 ?: System.getenv('LASTBENCHCAP_GITHUB_REPOS_FILE')
         List<String> ghRepos = []
+        
         if (reposFileProp) {
             def reposFile = new File(reposFileProp)
             if (!reposFile.isAbsolute()) {
@@ -38,29 +49,66 @@ class RepoManagementSettingsPlugin implements Plugin<Settings> {
                     .collect { it.trim() }
                     .findAll { !it.isEmpty() }
         }
+        
+        // Default repositories if none specified
+        if (ghRepos.isEmpty()) {
+            ghRepos = ['lastbenchcap-common', 'lastbenchcap-common-gradle']
+        }
 
         settings.dependencyResolutionManagement {
             repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
             repositories {
                 // Add GitHub Packages repos for internal artifacts
-                if (!ghRepos.isEmpty()) {
-                    ghRepos.each { String repoName ->
-                        maven { MavenArtifactRepository r ->
-                            r.name = "GitHubPackages-${repoName}"
-                            r.setUrl(settings.providers.provider { "https://maven.pkg.github.com/${ghOwner}/${repoName}" })
-                            r.credentials { cred ->
-                                cred.setUsername(System.getenv('GITHUB_USERNAME') ?: System.getenv('USERNAME') ?: 'github')
-                                cred.setPassword(System.getenv('GITHUB_TOKEN') ?: System.getenv('TOKEN') ?: '')
-                            }
-                            r.content { content ->
-                                content.includeGroup('com.lastbenchcap')
-                            }
+                ghRepos.each { String repoName ->
+                    maven { MavenArtifactRepository r ->
+                        r.name = "GitHubPackages-${repoName}"
+                        r.setUrl(settings.providers.provider { "https://maven.pkg.github.com/${ghOwner}/${repoName}" })
+                        r.credentials { cred ->
+                            cred.setUsername(System.getenv('GITHUB_USERNAME') ?: System.getenv('USERNAME') ?: 'github')
+                            cred.setPassword(System.getenv('GITHUB_TOKEN') ?: System.getenv('TOKEN') ?: '')
+                        }
+                        r.content { content ->
+                            content.includeGroup('com.lastbenchcap')
                         }
                     }
                 }
 
                 // Local and public repos
                 mavenLocal()
+                mavenCentral()
+            }
+        }
+    }
+    
+    private void configureFallback(Settings settings) {
+        def ghOwner = System.getenv('GITHUB_REPOSITORY_OWNER')
+                ?: settings.providers.gradleProperty('lastbenchcap.github.owner').orNull
+                ?: settings.providers.gradleProperty('github.owner').orNull
+                ?: 'rmarap'
+        
+        // Default repositories for fallback
+        def defaultRepos = ['lastbenchcap-common', 'lastbenchcap-common-gradle']
+        
+        settings.dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+            repositories {
+                mavenLocal()
+                
+                // GitHub Packages repositories
+                defaultRepos.each { String repoName ->
+                    maven {
+                        name = "GitHubPackages-${repoName}"
+                        url = uri("https://maven.pkg.github.com/${ghOwner}/${repoName}")
+                        credentials {
+                            username = System.getenv('GITHUB_USERNAME') ?: System.getenv('USERNAME') ?: 'github'
+                            password = System.getenv('GITHUB_TOKEN') ?: System.getenv('TOKEN') ?: ''
+                        }
+                        content {
+                            includeGroup('com.lastbenchcap')
+                        }
+                    }
+                }
+                
                 mavenCentral()
             }
         }
