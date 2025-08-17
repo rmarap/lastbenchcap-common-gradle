@@ -20,7 +20,15 @@ This project provides two main plugins:
 
 ## Quick Start
 
-### For Libraries and Services
+### Prerequisites
+
+Before setting up your project, ensure you have:
+
+1. **Java 21 or higher** installed
+2. **GitHub Personal Access Token** with `read:packages` scope
+3. **Environment variables** configured (see [Environment Variables](#environment-variables-and-authentication) section)
+
+### For Common Libraries
 
 #### 1. Create gradle.properties
 
@@ -34,9 +42,9 @@ github.repo=your-repo-name
 
 # Library Information
 library.group=com.lastbenchcap
-library.artifactId=your-project-name
-library.name=Your Project Name
-library.description=Description of your project
+library.artifactId=your-library-name
+library.name=Your Library Name
+library.description=Description of your library
 
 # Repository Configuration
 lastbenchcap.github.repos.file=lastbenchcap-repos.txt
@@ -57,8 +65,7 @@ lastbenchcap-common-gradle
 ```gradle
 pluginManagement {
     repositories {
-        mavenLocal()
-        gradlePluginPortal()
+        // GitHub Packages first for our custom plugins
         maven {
             name = "GitHubPackages-common-gradle"
             url = uri("https://maven.pkg.github.com/rmarap/lastbenchcap-common-gradle")
@@ -67,27 +74,186 @@ pluginManagement {
                 password = System.getenv("GITHUB_TOKEN") ?: System.getenv("TOKEN") ?: ""
             }
         }
+        gradlePluginPortal()
+        // For local development, uncomment this line to use mavenLocal version of plugins
+        // mavenLocal()
     }
+    
+    // For local development, uncomment this line to use the local version of the plugin
+    // includeBuild '../lastbenchcap-common-gradle'
 }
 
 // Apply the repo-management-settings plugin
 plugins {
-    id 'com.lastbenchcap.repo-management-settings'
+    id 'com.lastbenchcap.repo-management-settings' version '+'
 }
+
+rootProject.name = 'your-project-name'
+```
+
+#### 4. Configure build.gradle
+
+```gradle
+// Using buildscript to explicitly resolve the plugin from GitHub Packages
+buildscript {
+    repositories {
+        maven {
+            name = "GitHubPackages-common-gradle"
+            url = uri("https://maven.pkg.github.com/rmarap/lastbenchcap-common-gradle")
+            credentials {
+                username = System.getenv("GITHUB_USERNAME") ?: System.getenv("USERNAME") ?: "github"
+                password = System.getenv("GITHUB_TOKEN") ?: System.getenv("TOKEN") ?: ""
+            }
+        }
+        gradlePluginPortal()
+        mavenLocal()
+    }
+    dependencies {
+        // Using '+' to always pull the latest version
+        classpath 'com.lastbenchcap:com.lastbenchcap.common.gradle:+'
+    }
+}
+
+apply plugin: 'com.lastbenchcap.common.gradle'
+```
+
+### For Services
+
+#### 1. Create gradle.properties
+
+```properties
+# Version Management
+library.version=1.0.0
+
+# GitHub Configuration
+github.owner=your-github-username
+github.repo=your-service-name
+
+# Library Information
+library.group=com.lastbenchcap
+library.artifactId=your-service-name
+library.name=Your Service Name
+library.description=Description of your service
+
+# Repository Configuration
+lastbenchcap.github.repos.file=lastbenchcap-repos.txt
+lastbenchcap.github.owner=your-github-username
+```
+
+#### 2. Create lastbenchcap-repos.txt
+
+```txt
+# GitHub repositories hosting internal Maven packages
+lastbenchcap-common
+lastbenchcap-common-gradle
+# Add other repositories as needed
+```
+
+#### 3. Configure settings.gradle
+
+```gradle
+pluginManagement {
+    repositories {
+        // GitHub Packages first for our custom plugins
+        maven {
+            name = "GitHubPackages-common-gradle"
+            url = uri("https://maven.pkg.github.com/rmarap/lastbenchcap-common-gradle")
+            credentials {
+                username = System.getenv("GITHUB_USERNAME") ?: System.getenv("USERNAME") ?: "github"
+                password = System.getenv("GITHUB_TOKEN") ?: System.getenv("TOKEN") ?: ""
+            }
+        }
+        gradlePluginPortal()
+        // For local development, uncomment this line to use mavenLocal version of plugins
+        // mavenLocal()
+    }
+    
+    // For local development, uncomment this line to use the local version of the plugin
+    // includeBuild '../lastbenchcap-common-gradle'
+}
+
+// Apply the repo-management-settings plugin
+plugins {
+    id 'com.lastbenchcap.repo-management-settings' version '+'
+}
+
+rootProject.name = 'your-service-name'
 ```
 
 #### 4. Configure build.gradle
 
 ```gradle
 plugins {
-    id 'com.lastbenchcap.common.gradle'
+    // Add your service-specific plugins here
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
-// Optional: Add project-specific dependencies
 dependencies {
+    // Include the common library
+    implementation 'com.lastbenchcap:common:+'
+    
+    // Add service-specific dependencies
     runtimeOnly 'org.postgresql:postgresql'
 }
 ```
+
+## Environment Variables and Authentication
+
+The build system uses several environment variables for GitHub Packages authentication and configuration:
+
+### Required Environment Variables
+
+1. **`GITHUB_TOKEN`** (Primary) - GitHub Personal Access Token with `read:packages` scope
+2. **`GITHUB_USERNAME`** (Primary) - Your GitHub username
+
+### Fallback Environment Variables
+
+If the primary variables are not set, the system falls back to:
+- **`TOKEN`** - Alternative token variable
+- **`USERNAME`** - Alternative username variable
+- **`github`** - Default username if none specified
+
+### Setting Environment Variables
+
+**macOS/Linux:**
+```bash
+export GITHUB_TOKEN=your_github_token_here
+export GITHUB_USERNAME=your_github_username
+```
+
+**Windows Command Prompt:**
+```cmd
+set GITHUB_TOKEN=your_github_token_here
+set GITHUB_USERNAME=your_github_username
+```
+
+**Windows PowerShell:**
+```powershell
+$env:GITHUB_TOKEN="your_github_token_here"
+$env:GITHUB_USERNAME="your_github_username"
+```
+
+**For CI/CD (GitHub Actions):**
+```yaml
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_USERNAME: ${{ github.actor }}
+```
+
+### Creating a GitHub Personal Access Token
+
+1. Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Click "Generate new token (classic)"
+3. Select scopes:
+   - `read:packages` - Required for reading packages
+   - `write:packages` - Required if you need to publish packages
+4. Copy the token and set it as `GITHUB_TOKEN`
+
+### Troubleshooting Authentication
+
+- **"Authentication failed"**: Check your `GITHUB_TOKEN` has the correct scopes
+- **"Repository not found"**: Verify your `GITHUB_USERNAME` matches the repository owner
+- **"Permission denied"**: Ensure your token has access to the specific repositories
 
 ## Plugin Details
 
